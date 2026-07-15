@@ -1,0 +1,159 @@
+{
+ "meta": {
+  "episode": "demo",
+  "name": "示例工程-欢迎使用AI驯剪",
+  "layout": "V0-fx",
+  "title": "AI 剪的视频|你说了算|",
+  "dur": 24,
+  "durPreview": 24,
+  "cam": {
+   "full": "cam-demo.mp4",
+   "preview": "cam-demo.mp4"
+  },
+  "capsFile": "work/caps-full.json"
+ },
+ "boxes": {
+  "cam": {
+   "y": 0,
+   "h": 1920
+  },
+  "chap": {
+   "y": 100
+  },
+  "title": {
+   "y": 170
+  },
+  "beat": {
+   "x": 76,
+   "y": 1020,
+   "w": 860
+  },
+  "cap": {
+   "y": 1400
+  },
+  "card": {
+   "x": 56,
+   "y": 260,
+   "w": 968,
+   "h": 470
+  }
+ },
+ "chapters": [
+  {
+   "n": "01",
+   "lab": "看看动效",
+   "en": "COMPONENTS",
+   "s": 0,
+   "e": 12
+  },
+  {
+   "n": "02",
+   "lab": "上手改它",
+   "en": "TAKE CONTROL",
+   "s": 12,
+   "e": 24
+  }
+ ],
+ "pops": [
+  {
+   "id": "p1",
+   "s": 0.5,
+   "e": 4,
+   "c": "cyan",
+   "lab": "欢迎",
+   "zh": "这是|弹字|组件",
+   "entrance": "pop"
+  },
+  {
+   "id": "p2",
+   "s": 8,
+   "e": 11.5,
+   "c": "gold",
+   "lab": "提示",
+   "zh": "所有元素|都能拖|",
+   "entrance": "glitch"
+  },
+  {
+   "id": "p3",
+   "s": 16,
+   "e": 19.5,
+   "c": "red",
+   "lab": "快捷键",
+   "zh": "空格播放 |⌘Z 撤销|",
+   "entrance": "drop"
+  }
+ ],
+ "cards": [
+  {
+   "id": "cx1",
+   "type": "list",
+   "s": 1,
+   "e": 5.5,
+   "tc": "cyan",
+   "bare": true,
+   "title": "28 种|动效组件|",
+   "rows": [
+    {
+     "i": "ok",
+     "t": "弹字 / 卡片 / 章节 / 字幕"
+    },
+    {
+     "i": "ok",
+     "t": "全部数据驱动 timeline.json"
+    }
+   ]
+  },
+  {
+   "id": "cx2",
+   "type": "compare",
+   "s": 6,
+   "e": 11.5,
+   "bare": true,
+   "ltitle": "AI 剪完",
+   "lrows": ["黑盒", "改不动"],
+   "rtitle": "AI驯剪",
+   "rrows": ["秒级预览", "拖拽即改"],
+   "winner": "right"
+  },
+  {
+   "id": "cx3",
+   "type": "criteria",
+   "s": 12.5,
+   "e": 18,
+   "bare": true,
+   "kicker": "HOW IT WORKS",
+   "title": "复盘 AI 的剪辑|三步走|",
+   "rows": [
+    {
+     "label": "看",
+     "note": "时间轴五轨全透明",
+     "state": "pass"
+    },
+    {
+     "label": "改",
+     "note": "拖块 / 改字 / 换入场",
+     "state": "pass"
+    },
+    {
+     "label": "出",
+     "note": "一键渲染成片",
+     "state": "pass"
+    }
+   ],
+   "verdict": "控制权在你手里",
+   "verdictState": "pass"
+  },
+  {
+   "id": "cx4",
+   "type": "quote",
+   "s": 19,
+   "e": 23.5,
+   "tc": "gold",
+   "bare": true,
+   "text": "AI 负责剪|你负责说了算|",
+   "by": "AI驯剪"
+  }
+ ],
+ "media": [],
+ "chipT": null
+}

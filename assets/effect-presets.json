@@ -1,0 +1,104 @@
+{
+  "_note": "特效预设包(真源)。entrances/exits 参数移植自 style-lab 版式模板(Codex 从对标视频总结),frames 为边框视觉样式。gen.js 与真片编辑器共同读取;新增预设往这里加。",
+  "entrances": [
+    {
+      "key": "pop",
+      "label": "弹性弹出",
+      "desc": "scale 0.72→1 回弹"
+    },
+    {
+      "key": "mask",
+      "label": "遮罩擦除",
+      "desc": "clip-path 从右向左揭开"
+    },
+    {
+      "key": "slide-left",
+      "label": "左飞入",
+      "desc": "translateX -90→0"
+    },
+    {
+      "key": "slide-right",
+      "label": "右飞入",
+      "desc": "translateX +90→0"
+    },
+    {
+      "key": "slide-up",
+      "label": "下方滑入",
+      "desc": "translateY +70→0"
+    },
+    {
+      "key": "zoom",
+      "label": "推近",
+      "desc": "scale 1.18→1 带淡入"
+    },
+    {
+      "key": "flip",
+      "label": "翻转",
+      "desc": "perspective rotateY -72°→0"
+    },
+    {
+      "key": "fade",
+      "label": "淡入",
+      "desc": "纯透明度"
+    },
+    {
+      "key": "stamp",
+      "label": "盖章落定",
+      "desc": "scale1.5→1 快速砸下(柱子哥系)"
+    },
+    {
+      "key": "drop",
+      "label": "下落弹跳",
+      "desc": "y-90→0 bounce"
+    }
+  ],
+  "exits": [
+    {
+      "key": "fade",
+      "label": "淡出"
+    },
+    {
+      "key": "slide-down",
+      "label": "下滑退场"
+    },
+    {
+      "key": "shrink",
+      "label": "收缩退场"
+    }
+  ],
+  "frames": [
+    {
+      "key": "none",
+      "label": "无框"
+    },
+    {
+      "key": "glass",
+      "label": "荧光玻璃"
+    },
+    {
+      "key": "polaroid",
+      "label": "白边拍立得"
+    },
+    {
+      "key": "round",
+      "label": "圆角卡"
+    },
+    {
+      "key": "glow",
+      "label": "青光边"
+    },
+    {
+      "key": "stroke",
+      "label": "细描边"
+    },
+    {
+      "key": "white",
+      "label": "白卡投影(证据)"
+    },
+    {
+      "key": "redbox",
+      "label": "红描边(重点)"
+    }
+  ],
+  "_components_note": "公共渲染器当前 28 个组件。2026-07-10 最新10条增量: curveplot多曲线趋势/flywheel数据飞轮/criteria结论判定矩阵/evidencefocus证据聚焦;compare已支持winner错峰落版。完整语义映射见 对标拆解-柱子哥TZFILM-最新10条-2026-07-10.md"
+}

@@ -1,0 +1,9 @@
+node_modules/
+.vite/
+dist/
+*.log
+episodes/*/hf/assets/*.mp4
+episodes/*/renders/
+exports/
+effects-inbox/
+style-config.json
