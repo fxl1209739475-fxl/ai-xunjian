@@ -59,7 +59,7 @@ function cardInner(c){
  if(c.type==='progress'){const pc=col(c.tc||'green');return `<div class="pgwrap"><div class="pglabel">${kw(c.label||'',pc)}</div><div class="pgbar"><div class="pgfill" style="background:${pc};color:${pc}"></div></div>${(c.tags||[]).length?`<div class="pgtags">${(c.tags||[]).map(t=>`<span class="pgtag">${t}</span>`).join('')}</div>`:''}</div>`;
  }
  if(c.type==='roadmap')return `<div class="rmwrap"><i class="rmline"></i>${(c.items||[]).map((t,i)=>`<div class="rmnode${i===c.chipHl?' hl':''}"><i></i><span>${t}</span></div>`).join('')}</div>`;
- // ===== 柱子哥最新 10 条增量组件(2026-07-10) =====
+ // ===== 数据叙事系组件 =====
  if(c.type==='curveplot'){
   const series=(c.series||[]).slice(0,3).filter(s=>Array.isArray(s.values)&&s.values.length>1);
   const values=series.flatMap(s=>s.values.map(Number).filter(Number.isFinite));const lo=Math.min(...values,0),hi=Math.max(...values,1);const span=Math.max(1,hi-lo);
@@ -185,7 +185,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#0a0e16;font-fam
 .mframe.f-round{border-radius:28px;border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 36px rgba(0,0,0,.5)}
 .mframe.f-glow{border-radius:18px;border:2px solid rgba(46,230,214,.75);box-shadow:0 0 18px rgba(46,230,214,.45),0 0 44px rgba(46,230,214,.2)}
 .mframe.f-stroke{border-radius:12px;border:2px solid rgba(255,255,255,.55)}
-/* ===== 柱子哥系预设(2026-07-07 对标拆解移植) ===== */
+/* ===== 印章批注系预设 ===== */
 .stampwrap{display:flex;align-items:center;justify-content:center;width:100%}
 .stamp{transform:rotate(-8deg);border:6px solid currentColor;border-radius:14px;padding:18px 44px;font-size:76px;font-weight:900;letter-spacing:4px;text-align:center;opacity:.94}
 .stamp span{display:block;font-size:26px;letter-spacing:6px;margin-top:6px;opacity:.85}
@@ -234,7 +234,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#0a0e16;font-fam
 .rmnode.hl i{background:#f5b93d;box-shadow:0 0 16px rgba(245,185,61,.7)}
 .rmnode span{font-size:36px;font-weight:800;color:var(--ink)}
 .rmnode.hl span{color:#f5b93d}
-/* ===== 柱子哥最新 10 条增量组件(2026-07-10) ===== */
+/* ===== 数据叙事系组件 ===== */
 .fcard.curveplot,.fcard.flywheel,.fcard.criteria,.fcard.evidencefocus{padding:38px 48px;gap:14px}
 .cptop,.crhead,.efhead{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.cptop>div:first-child,.crhead,.efhead{flex-direction:column}
 .cptop small,.fwtitle small,.crhead small,.efhead small{display:block;color:#7e98a8;font-size:23px;font-weight:900;letter-spacing:2px}.cptop b,.fwtitle b,.crhead b,.efhead b{display:block;margin-top:5px;color:#fff;font-size:48px;line-height:1.08}.cptop b em,.fwtitle b em,.crhead b em,.efhead b em{font-style:normal}
