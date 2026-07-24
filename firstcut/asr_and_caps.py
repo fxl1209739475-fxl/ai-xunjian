@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # 转写 + 字幕构建：faster-whisper 词级时间戳 → ≤14字/行的逐字字幕
-# 用法: uv run --with faster-whisper python asr_and_caps.py <音频.wav> <输出caps.json> [模型名]
+# 用法: uv run --with faster-whisper python asr_and_caps.py <音频.wav> <输出caps.json> [模型名] [句段输出.json]
+# 第4参可选：把 whisper 原始句段(未拆行)另存一份——重说口误检测要按整句比相似度，拆行后比不准
 import sys, json, os, re
 
 audio, out = sys.argv[1], sys.argv[2]
 model_name = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("XUNJIAN_WHISPER_MODEL", "small")
+segs_out = sys.argv[4] if len(sys.argv) > 4 else None
 
 # ── ASR 错字订正词典（通用样例版）──
 # 转写常把英文品牌/术语拆错，按你的领域往下加即可；键=错误写法，值=正确写法
@@ -20,7 +22,9 @@ segs, info = m.transcribe(audio, language="zh", beam_size=5, word_timestamps=Tru
 
 MAX = 14  # 每行最多字数（竖屏单行不换行的安全值）
 caps = []
+raw_segs = []
 for s in segs:
+    raw_segs.append({"s": round(s.start, 2), "e": round(s.end, 2), "z": s.text.strip()})
     words = s.words or []
     if not words:
         caps.append({"s": round(s.start, 2), "e": round(s.end, 2), "z": s.text.strip()})
@@ -43,4 +47,6 @@ for c in caps:
         c["z"] = c["z"].replace(bad, good)
 
 json.dump(caps, open(out, "w"), ensure_ascii=False, indent=1)
+if segs_out:
+    json.dump(raw_segs, open(segs_out, "w"), ensure_ascii=False, indent=1)
 print(f"ASR_DONE lines={len(caps)} dur={caps[-1]['e'] if caps else 0}")

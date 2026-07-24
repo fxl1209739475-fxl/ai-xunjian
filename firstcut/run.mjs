@@ -1,9 +1,10 @@
 // 初剪引擎 —— 原片进，带动效的初剪工程出
-// 用法: node firstcut/run.mjs <原片.mp4> [--name 工程名] [--speed 1.2] [--no-ai]
-// 流程: 探测(含旋转) → 剪气口 → 提速 → 响度归一 → 转写字幕 → AI 初剪(可选) → 生成预览 → 去编辑器定剪
+// 用法: node firstcut/run.mjs <原片.mp4> [--name 工程名] [--speed 1.2] [--no-ai] [--no-retake] [--retake-sim 0.8]
+// 流程: 探测(含旋转) → 剪气口 → 剪重说口误 → 提速 → 响度归一 → 转写字幕 → AI 初剪(可选) → 生成预览 → 去编辑器定剪
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { detectRetakes, subtractRanges } from "./retake.mjs";
 
 const ROOT = process.cwd();
 const FFMPEG = process.env.XUNJIAN_FFMPEG || "ffmpeg";
@@ -20,6 +21,8 @@ const getOpt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1
 const NAME = getOpt("--name", path.basename(input).replace(/\.[^.]+$/, "").replace(/[^\w一-龥-]/g, "-"));
 const SPEED = Number(getOpt("--speed", "1.2"));
 const NO_AI = args.includes("--no-ai");
+const NO_RETAKE = args.includes("--no-retake");
+const RETAKE_SIM = Number(getOpt("--retake-sim", "0.8"));
 const EP = path.join(ROOT, "episodes", NAME);
 const step = (m) => console.log("\n▸ " + m);
 const run = (cmd, a, opts = {}) => spawnSync(cmd, a, { encoding: "utf8", maxBuffer: 64e6, ...opts });
@@ -53,6 +56,30 @@ for (let i = 0; i < starts.length; i++) {
 if (rawDur - cur > 0.2) segs.push([cur, rawDur]);
 if (!segs.length || segs.reduce((a, [s, e]) => a + e - s, 0) < 1) { segs = [[0, rawDur]]; console.log("  几乎无有效人声分段，保留全片"); }
 else console.log(`  保留 ${segs.length} 段，剪掉 ${(rawDur - segs.reduce((a, [s, e]) => a + e - s, 0)).toFixed(1)}s 气口`);
+
+// ── 2.5 剪重说口误（转写原片 → 紧挨着的高相似句 = 说错重来，剪前一遍保后一遍）──
+if (!NO_RETAKE) {
+  step("检测重说口误(转写原片,约1-2分钟)");
+  fs.mkdirSync(path.join(EP, "work"), { recursive: true });
+  const rawWav = path.join(EP, "work/raw-asr.wav");
+  const rawCaps = path.join(EP, "work/raw-caps.json");
+  const rawSegsPath = path.join(EP, "work/raw-segs.json");
+  run(FFMPEG, ["-y", "-v", "error", "-i", input, "-vn", "-ac", "1", "-ar", "16000", rawWav]);
+  const ra = run("uv", ["run", "--with", "faster-whisper", "python",
+    path.join(ROOT, "firstcut/asr_and_caps.py"), rawWav, rawCaps,
+    process.env.XUNJIAN_WHISPER_MODEL || "small", rawSegsPath]);
+  if (ra.status === 0 && fs.existsSync(rawSegsPath)) {
+    const rawSegs = JSON.parse(fs.readFileSync(rawSegsPath, "utf8"));
+    const { cuts, report } = detectRetakes(rawSegs, { sim: RETAKE_SIM });
+    if (cuts.length) {
+      segs = subtractRanges(segs, cuts);
+      const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${(t % 60).toFixed(1).padStart(4, "0")}`;
+      console.log(`  剪掉 ${report.length} 处重说(保留后一遍)——请核对,误剪就加 --no-retake 重跑:`);
+      for (const r of report) console.log(`    ✂ [${fmt(r.s)}-${fmt(r.e)}]「${r.cut}」→ 保留「${r.kept}」`);
+      fs.writeFileSync(path.join(EP, "work/retake-report.json"), JSON.stringify(report, null, 1));
+    } else console.log("  未发现重说段 ✓");
+  } else console.log("  ⚠️ 转写不可用(需安装 uv),跳过重说检测");
+}
 
 // ── 3. 剪切 + 提速 + 转码（编辑器友好的密集关键帧）──
 step(`剪切并提速 ${SPEED}x`);
