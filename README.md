@@ -62,6 +62,17 @@ flowchart LR
 
 **环境**：Node.js ≥ 20 · [ffmpeg](https://ffmpeg.org/)（`brew install ffmpeg`）· 转写需 [uv](https://docs.astral.sh/uv/)（可选）· AI 初剪需任意 LLM CLI 如 [Claude Code](https://claude.com/claude-code)（可选）
 
+> 🤖 **不想手动装环境？让 AI 帮你装。** clone 本仓库后，在仓库目录里打开你的 AI 编程助手（Claude Code / Codex / Cursor 都行），把下面这句话发给它：
+>
+> ```
+> 请读这个仓库根目录的 AGENTS.md，按里面的〈环境自检与安装〉帮我检查并装好缺的工具，
+> 然后按〈验证序列〉跑通示例工程，最后告诉我怎么初剪我自己的视频。
+> ```
+>
+> 仓库自带 `AGENTS.md`（AI 助手说明书）：装什么、怎么验证、缺了会怎样、Windows 注意什么，AI 照着一步步来就行。
+
+**🪟 Windows 支持**：初剪引擎、编辑器、实时预览、AI 功能均原生支持（字幕字体自动用微软雅黑）；**正式导出（无头渲染）在原生 Windows 属实验性**，遇到问题推荐在 [WSL2](https://learn.microsoft.com/windows/wsl/install) 里跑（等同 Linux 全功能）。三平台核心链路由 GitHub Actions 持续验证。
+
 ### 第一步：跑通示例（3 分钟）
 
 ```bash

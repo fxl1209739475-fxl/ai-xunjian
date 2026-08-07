@@ -11,7 +11,54 @@ const configPath = path.resolve(projectDir, "style-config.json");
 // style-lab 在 episodes/douyin-fde-motion-reference/work/style-lab → episodes 根 = ../../..
 const episodesRoot = process.env.XUNJIAN_EPISODES || path.resolve(projectDir, "episodes");
 const FFMPEG = process.env.XUNJIAN_FFMPEG || "ffmpeg";
-const HSGB = process.env.XUNJIAN_CJK_FONT || "/System/Library/Fonts/Hiragino Sans GB.ttc"; // macOS 系统字体;其他平台请设 XUNJIAN_CJK_FONT 指向本地中文字体
+const IS_WIN = process.platform === "win32";
+// 中文字体(字幕/动效字形子集化用):按平台取系统自带,找不到就跳过子集化退回系统字体,不阻断渲染
+const HSGB = process.env.XUNJIAN_CJK_FONT || (
+  process.platform === "darwin" ? "/System/Library/Fonts/Hiragino Sans GB.ttc"
+  : IS_WIN ? "C:\\Windows\\Fonts\\msyh.ttc" // 微软雅黑
+  : "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc");
+
+// Windows 下 cmd.exe 参数引号
+const winq = (x: string) => (/[\s&|<>^"]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x);
+
+// 调用户的 LLM CLI:提示词一律走 stdin(跨平台安全——Windows 的 cmd.exe 塞不下多行长参数);
+// npm 装的 claude 在 Windows 是 claude.cmd,新版 Node 不经 shell 拉不起来,故 win32 走 shell
+const LLM_BIN = process.env.XUNJIAN_CLAUDE || "claude";
+function spawnLlm(extra: string[], prompt: string) {
+  const args = ["-p", ...extra, "--output-format", "text"];
+  const child = IS_WIN
+    ? spawn([LLM_BIN, ...args].map(winq).join(" "), {shell: true, env: {...process.env}})
+    : spawn(LLM_BIN, args, {env: {...process.env}});
+  child.stdin?.write(prompt);
+  child.stdin?.end();
+  return child;
+}
+
+// 跨平台逐条执行命令序列(替代原来的 bash -lc "a && b && c",Windows 没有 bash)
+type Step = {cmd: string; args: string[]; cwd?: string; env?: NodeJS.ProcessEnv; optional?: boolean; winShell?: boolean};
+function runSteps(steps: Step[], onLog: (s: string) => void, after: (ok: boolean) => void) {
+  let i = 0;
+  const next = () => {
+    if (i >= steps.length) return after(true);
+    const s = steps[i++];
+    const opts = {cwd: s.cwd, env: s.env ? {...process.env, ...s.env} : process.env};
+    const child = IS_WIN && s.winShell
+      ? spawn([s.cmd, ...s.args].map(winq).join(" "), {...opts, shell: true})
+      : spawn(s.cmd, s.args, opts);
+    let settled = false;
+    const settle = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (ok || s.optional) next();
+      else after(false);
+    };
+    child.stdout?.on("data", (d) => onLog(d.toString()));
+    child.stderr?.on("data", (d) => onLog(d.toString()));
+    child.on("error", (e) => { onLog(`\n✗ ${s.cmd} 启动失败: ${e}\n`); settle(false); });
+    child.on("close", (code) => { if (code !== 0) onLog(`\n${s.optional ? "⚠️(可选步骤失败,继续)" : "✗"} ${s.cmd} 退出码 ${code}\n`); settle(code === 0); });
+  };
+  next();
+}
 
 const localConfigApi = (): Plugin => ({
   name: "local-style-config-api",
@@ -196,7 +243,7 @@ const episodeApi = (): Plugin => ({
       const url = new URL(req.url || "", "http://x");
       const dir = safeEp(url.searchParams.get("ep"));
       if (!dir) { res.statusCode = 404; res.end(JSON.stringify({error: "episode-not-found"})); return; }
-      const child = spawn("bash", ["-lc", "FULL=1 node gen.js"], {cwd: dir});
+      const child = spawn(process.execPath, ["gen.js"], {cwd: dir, env: {...process.env, FULL: "1"}});
       let log = "";
       child.stdout.on("data", (d) => { log += d.toString(); });
       child.stderr.on("data", (d) => { log += d.toString(); });
@@ -303,7 +350,7 @@ const episodeApi = (): Plugin => ({
 - 结论判定矩阵 {"type":"criteria","title":"…","rows":[{"label":"条件","note":"说明","state":"pass"},{"label":"风险","note":"说明","state":"fail"}],"verdict":"…","verdictState":"pass"} (口播讲筛选标准、能活/淘汰、满足哪些条件时用;state可pass/warn/fail)
 - 证据聚焦 {"type":"evidencefocus","title":"…","source":"官方资料","focus":[{"x":8,"y":20,"w":70,"h":15,"label":"关键结论"}]} (已有原文截图且口播正在引用关键句时用;src由素材库后配,不要编造文件名)
 只输出一个 JSON 对象,格式 {"card":{...}},不要解释,不要代码块围栏。`;
-        const child = spawn(process.env.XUNJIAN_CLAUDE || "claude", ["-p", prompt, "--output-format", "text"], {env: {...process.env}});
+        const child = spawnLlm([], prompt);
         let out = "";
         let done = false;
         const timer = setTimeout(() => { if (!done) { child.kill(); res.end(JSON.stringify({ok: false, error: "AI 超时(90s)"})); done = true; } }, 90000);
@@ -381,7 +428,7 @@ ${script}
 5. entrance 从 pop/slide-left/slide-right/slide-up/zoom/drop/fade 选;frame 从 white(白卡证据)/glass/round/glow/none 选;照片类证据可加 "kenburns":true(缓推)。
 只输出一个 JSON,不要解释不要围栏:
 {"placements":[{"src":"assets/文件名","type":"image或video","s":秒,"e":秒,"x":..,"y":..,"w":..,"h":..,"entrance":"..","frame":"..","kenburns":false,"why":"一句匹配原因"}],"skipped":[{"src":"assets/文件名","why":"一句跳过原因"}]}`;
-        const child = spawn(process.env.XUNJIAN_CLAUDE || "claude", ["-p", prompt, "--allowedTools", "Read", "--output-format", "text"], {env: {...process.env}});
+        const child = spawnLlm(["--allowedTools", "Read"], prompt);
         let out = "";
         let done = false;
         const timer = setTimeout(() => { if (!done) { child.kill(); res.end(JSON.stringify({ok: false, error: "AI 超时(240s)"})); done = true; } }, 240000);
@@ -410,7 +457,7 @@ ${script}
             const file = path.join(dir, "timeline.json");
             await fs.copyFile(file, file.replace(/\.json$/, ".backup.json"));
             await fs.writeFile(file, `${JSON.stringify(tlData, null, 2)}\n`, "utf8");
-            const g = spawn("bash", ["-lc", "FULL=1 node gen.js"], {cwd: dir});
+            const g = spawn(process.execPath, ["gen.js"], {cwd: dir, env: {...process.env, FULL: "1"}});
             g.on("close", () => res.end(JSON.stringify({ok: true, placed: good, skipped: j.skipped || []})));
           } catch (e) { res.end(JSON.stringify({ok: false, error: String(e)})); }
         });
@@ -477,45 +524,55 @@ ${script}
       const mode = url.searchParams.get("mode") === "final" ? "final" : "draft";
       const st: RenderState = {running: true, startedAt: Date.now(), exitCode: null, log: "", mode};
       renderStates[ep] = st;
-      const common = [
-        `cd "${dir}"`,
-        `FULL=1 node gen.js`,
-        `uv run --with fonttools --with brotli pyftsubset "${HSGB}" --font-number=0 --text-file=work/glyphs.txt --flavor=woff2 --output-file=hf/fonts/hsgb-w3.woff2 --no-hinting --desubroutinize`,
-        `uv run --with fonttools --with brotli pyftsubset "${HSGB}" --font-number=2 --text-file=work/glyphs.txt --flavor=woff2 --output-file=hf/fonts/hsgb-w6.woff2 --no-hinting --desubroutinize`
-      ];
-      let script: string;
+      const onLog = (s: string) => { st.log = (st.log + s).slice(-4000); };
+      // 公共前段:重生成动效页 + 字幕字体子集化(缺字体/uv 时跳过,退回系统字体,不阻断)
+      const steps: Step[] = [{cmd: process.execPath, args: ["gen.js"], cwd: dir, env: {FULL: "1"}}];
+      if (fscore.existsSync(HSGB)) {
+        for (const fn of ["0", "2"]) steps.push({
+          cmd: "uv", args: ["run", "--with", "fonttools", "--with", "brotli", "pyftsubset", HSGB,
+            `--font-number=${fn}`, "--text-file=work/glyphs.txt", "--flavor=woff2",
+            `--output-file=hf/fonts/hsgb-w${fn === "0" ? "3" : "6"}.woff2`, "--no-hinting", "--desubroutinize"],
+          cwd: dir, optional: true,
+        });
+      } else onLog(`⚠️ 未找到中文字体 ${HSGB},跳过字形子集化(可设 XUNJIAN_CJK_FONT 指向本地中文字体)\n`);
+      let outFile = "";
       if (mode === "final") {
-        // 正式版:standard 高清 → BGM 混音 → 兼容编码 → 归档到 自媒体作品/<片名>/ → 访达弹出
+        // 正式版:standard 高清 → BGM 混音 → 兼容编码 → 归档 → 文件管理器里弹出定位
         const tlData = JSON.parse(fscore.readFileSync(path.join(dir, "timeline.json"), "utf8"));
         const name = String(tlData.meta?.name || ep).replace(/[/\\:*?"<>|]/g, "_");
         const dur = Number(tlData.meta?.dur || 0);
         const outDir = path.join(ARCHIVE_ROOT, name);
         fscore.mkdirSync(outDir, {recursive: true});
-        let outFile = path.join(outDir, `成片-${name}.mp4`);
+        outFile = path.join(outDir, `成片-${name}.mp4`);
         if (fscore.existsSync(outFile)) {
           const t = new Date();
           outFile = path.join(outDir, `成片-${name}-${String(t.getHours()).padStart(2, "0")}${String(t.getMinutes()).padStart(2, "0")}.mp4`);
         }
         st.out = outFile;
         const bgm = fscore.existsSync(path.join(dir, "hf/assets/bgm.m4a")) ? path.join(dir, "hf/assets/bgm.m4a") : DEFAULT_BGM;
-        script = [
-          ...common,
-          `cd hf && npx hyperframes@0.6.64 render -q standard -f 30 -o renders/editor-raw.mp4 --workers 2`,
-          `cd .. && "${FFMPEG}" -y -i hf/renders/editor-raw.mp4 -i work/voice-norm.wav -stream_loop -1 -i "${bgm}" -filter_complex "[2:a]volume=0.30[bg];[1:a][bg]amix=inputs=2:duration=first:normalize=0[a]" -map 0:v -map "[a]" -t ${dur} -c:v libx264 -pix_fmt yuv420p -profile:v high -level 4.0 -g 30 -keyint_min 30 -sc_threshold 0 -movflags +faststart -c:a aac -b:a 192k "${outFile}"`,
-          `cp "${outFile}" hf/renders/editor-preview.mp4`,
-          `open -R "${outFile}"`
-        ].join(" && ");
+        steps.push({cmd: "npx", args: ["hyperframes@0.6.64", "render", "-q", "standard", "-f", "30", "-o", "renders/editor-raw.mp4", "--workers", "2"], cwd: path.join(dir, "hf"), winShell: true});
+        steps.push({cmd: FFMPEG, args: ["-y", "-i", "hf/renders/editor-raw.mp4", "-i", "work/voice-norm.wav", "-stream_loop", "-1", "-i", bgm,
+          "-filter_complex", "[2:a]volume=0.30[bg];[1:a][bg]amix=inputs=2:duration=first:normalize=0[a]",
+          "-map", "0:v", "-map", "[a]", "-t", String(dur), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "4.0",
+          "-g", "30", "-keyint_min", "30", "-sc_threshold", "0", "-movflags", "+faststart", "-c:a", "aac", "-b:a", "192k", outFile], cwd: dir});
       } else {
-        script = [
-          ...common,
-          `cd hf && npx hyperframes@0.6.64 render -q draft -f ${fps} -o renders/editor-raw.mp4 --workers 2`,
-          `cd .. && "${FFMPEG}" -y -i hf/renders/editor-raw.mp4 -i work/voice-norm.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 160k -shortest hf/renders/editor-preview.mp4`
-        ].join(" && ");
+        steps.push({cmd: "npx", args: ["hyperframes@0.6.64", "render", "-q", "draft", "-f", String(fps), "-o", "renders/editor-raw.mp4", "--workers", "2"], cwd: path.join(dir, "hf"), winShell: true});
+        steps.push({cmd: FFMPEG, args: ["-y", "-i", "hf/renders/editor-raw.mp4", "-i", "work/voice-norm.wav",
+          "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", "hf/renders/editor-preview.mp4"], cwd: dir});
       }
-      const child = spawn("bash", ["-lc", script], {cwd: dir});
-      child.stdout.on("data", (d) => { st.log = (st.log + d.toString()).slice(-4000); });
-      child.stderr.on("data", (d) => { st.log = (st.log + d.toString()).slice(-4000); });
-      child.on("close", (code) => { st.running = false; st.exitCode = code; });
+      runSteps(steps, onLog, (ok) => {
+        if (ok && mode === "final" && outFile) {
+          try { fscore.copyFileSync(outFile, path.join(dir, "hf/renders/editor-preview.mp4")); } catch (e) { onLog("\n⚠️ 预览副本拷贝失败: " + e + "\n"); }
+          // 在文件管理器里定位成片:mac 访达 / Windows 资源管理器 / Linux 打开目录(失败不影响成片)
+          try {
+            if (process.platform === "darwin") spawn("open", ["-R", outFile]);
+            else if (IS_WIN) spawn("explorer", [`/select,${outFile}`]);
+            else spawn("xdg-open", [path.dirname(outFile)]);
+          } catch {}
+        }
+        st.running = false;
+        st.exitCode = ok ? 0 : 1;
+      });
       res.end(JSON.stringify({ok: true, started: true, mode, fps}));
     });
   }

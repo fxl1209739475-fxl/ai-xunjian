@@ -26,6 +26,10 @@ const RETAKE_SIM = Number(getOpt("--retake-sim", "0.8"));
 const EP = path.join(ROOT, "episodes", NAME);
 const step = (m) => console.log("\n▸ " + m);
 const run = (cmd, a, opts = {}) => spawnSync(cmd, a, { encoding: "utf8", maxBuffer: 64e6, ...opts });
+// LLM CLI 调用:提示词走 stdin(跨平台安全);npm 装的 claude 在 Windows 是 .cmd,必须经 shell 才拉得起来
+const runCli = (cmd, a, opts = {}) => process.platform === "win32"
+  ? spawnSync([cmd, ...a].join(" "), { encoding: "utf8", maxBuffer: 64e6, shell: true, ...opts })
+  : run(cmd, a, opts);
 const die = (m) => { console.error("✗ " + m); process.exit(1); };
 
 // ── 1. 探测（旋转元数据决定横竖）──
@@ -140,7 +144,7 @@ if (!NO_AI && caps.length) {
   const prompt = fs.readFileSync(path.join(ROOT, "firstcut/ai-cut-prompt.md"), "utf8")
     .replaceAll("{{DUR}}", dur.toFixed(2)).replaceAll("{{EPISODE}}", NAME).replaceAll("{{CAM}}", camName)
     .replaceAll("{{BOXES}}", JSON.stringify(boxes)).replaceAll("{{CAPTIONS}}", JSON.stringify(caps));
-  const ai = run(LLM, ["-p", prompt, "--output-format", "text"], { timeout: 300000 });
+  const ai = runCli(LLM, ["-p", "--output-format", "text"], { input: prompt, timeout: 300000 });
   const out = ai.stdout || "";
   const j0 = out.indexOf("{"), j1 = out.lastIndexOf("}");
   try {

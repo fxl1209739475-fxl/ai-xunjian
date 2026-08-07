@@ -1,0 +1,45 @@
+# 三平台冒烟：验证「装好 ffmpeg + Node 就能跑通初剪核心链路」——
+# 示例工程生成 + 机械初剪(剪气口/提速/归一/出工程/生成预览页)。
+# 不装 uv / LLM CLI，顺带验证缺可选依赖时的优雅降级不炸。
+name: smoke
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  firstcut:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y --no-progress
+      - name: Install ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+      - name: Install ffmpeg (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm ci
+      - name: Setup demo project
+        run: npm run setup
+      - name: Make test clip (8s, tone + solid color)
+        shell: bash
+        run: ffmpeg -y -v error -f lavfi -i "sine=frequency=440:duration=8" -f lavfi -i "color=c=0x203040:s=540x960:r=30" -shortest -map 1:v -map 0:a -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac ci-test.mp4
+      - name: Run firstcut (mechanical only)
+        run: node firstcut/run.mjs ci-test.mp4 --name ci-smoke --no-ai --no-retake
+      - name: Assert outputs
+        shell: bash
+        run: |
+          test -f episodes/ci-smoke/timeline.json
+          test -f episodes/ci-smoke/hf/assets/cam-ci-smoke.mp4
+          test -f episodes/ci-smoke/hf/index.html
+          echo "✅ core pipeline OK on ${{ runner.os }}"
