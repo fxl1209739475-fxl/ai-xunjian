@@ -97,9 +97,14 @@ const fcPath = path.join(EP, "work/cutfc.txt");
 fs.writeFileSync(fcPath, fc);
 const camName = "cam-" + NAME + ".mp4";
 const cam = path.join(EP, "hf/assets", camName);
-let r = run(FFMPEG, ["-y", "-v", "error", "-i", input, "-filter_complex_script", fcPath,
+const cutArgs = (fcArgs) => ["-y", "-v", "error", "-i", input, ...fcArgs,
   "-map", "[vf]", "-map", "[af]", "-c:v", "libx264", "-crf", "18", "-preset", "fast",
-  "-pix_fmt", "yuv420p", "-g", "15", "-c:a", "aac", "-b:a", "192k", cam]);
+  "-pix_fmt", "yuv420p", "-g", "15", "-c:a", "aac", "-b:a", "192k", cam];
+let r = run(FFMPEG, cutArgs(["-filter_complex_script", fcPath]));
+if (r.status !== 0 && /Unrecognized option 'filter_complex_script'/.test(r.stderr || "")) {
+  // ffmpeg 7.0 起废弃该选项,部分新构建(如 Windows choco 版)已移除 → 滤镜图改内联直传
+  r = run(FFMPEG, cutArgs(["-filter_complex", fc.replace(/\n/g, "")]));
+}
 if (r.status !== 0) die("剪切失败: " + r.stderr?.slice(-300));
 
 step("响度归一 (loudnorm 单独一步)");
