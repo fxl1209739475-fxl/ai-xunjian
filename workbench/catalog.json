@@ -1,0 +1,169 @@
+{
+ "schemaVersion": 1,
+ "libraryName": "本地剪辑与动效中心",
+ "updatedAt": "2026-08-07",
+ "items": [
+  {
+   "id": "demo-classic-card-v1",
+   "name": "示例·经典信息卡",
+   "version": "1.0.0",
+   "status": "stable",
+   "section": "styles",
+   "kind": "editing-style",
+   "sharing": "shareable-core",
+   "summary": "章节条 + 弹字 + 图表卡片的经典口播信息卡风格——即 npm run setup 生成的示例工程,打开「真片编辑」即可拆解学习。",
+   "sourcePath": "episodes/demo",
+   "transferNote": "你的每个 episodes/<工程> 都是一个剪辑方案:风格调稳定后,点右上「登记资产」把它记入总库管理版本与状态。"
+  },
+  {
+   "id": "semantic-motion-atlas-v1",
+   "name": "语义动画库",
+   "version": "1.0.1",
+   "status": "stable",
+   "section": "motions",
+   "kind": "atlas",
+   "sharing": "shareable-core",
+   "summary": "16 种基础语义动画，点击名称即可直接预览。",
+   "sourcePath": "effects/semantic-atlas",
+   "preview": {
+    "type": "html",
+    "path": "gallery.html"
+   },
+   "contentsTitle": "16 种语义动画",
+   "contents": [
+    {
+     "number": "01",
+     "id": "mask-reveal",
+     "name": "遮罩揭示"
+    },
+    {
+     "number": "02",
+     "id": "path-follow",
+     "name": "路径跟随"
+    },
+    {
+     "number": "03",
+     "id": "scale-pulse",
+     "name": "缩放脉冲"
+    },
+    {
+     "number": "04",
+     "id": "orbit-rotate",
+     "name": "轨道旋转"
+    },
+    {
+     "number": "05",
+     "id": "morph-state",
+     "name": "形态变换"
+    },
+    {
+     "number": "06",
+     "id": "split-merge",
+     "name": "分裂合并"
+    },
+    {
+     "number": "07",
+     "id": "accumulate-disperse",
+     "name": "聚集扩散"
+    },
+    {
+     "number": "08",
+     "id": "cascade-sequence",
+     "name": "级联序列"
+    },
+    {
+     "number": "09",
+     "id": "branch-converge",
+     "name": "分支回流"
+    },
+    {
+     "number": "10",
+     "id": "loop-feedback",
+     "name": "闭环循环"
+    },
+    {
+     "number": "11",
+     "id": "compare-align",
+     "name": "对齐比较"
+    },
+    {
+     "number": "12",
+     "id": "threshold-filter",
+     "name": "阈值筛选"
+    },
+    {
+     "number": "13",
+     "id": "collision-spring",
+     "name": "碰撞回弹"
+    },
+    {
+     "number": "14",
+     "id": "particle-field",
+     "name": "粒子场"
+    },
+    {
+     "number": "15",
+     "id": "camera-depth",
+     "name": "镜头纵深"
+    },
+    {
+     "number": "16",
+     "id": "kinetic-type",
+     "name": "动态文字"
+    }
+   ],
+   "invocation": "先从语义动画库匹配机制，再为当前文案选择动画语法。",
+   "tags": [
+    "原子语法",
+    "复合叙事",
+    "分类库",
+    "可回退"
+   ]
+  },
+  {
+   "id": "animation-richness-v1",
+   "name": "动画丰富度扩展",
+   "version": "1.0.0",
+   "status": "stable",
+   "section": "motions",
+   "kind": "atlas",
+   "sharing": "shareable-core",
+   "summary": "在封面海报 V2 之外补充漫画、磁力、压力、分叉、波纹和级联等语法。",
+   "sourcePath": "effects/animation-richness",
+   "preview": {
+    "type": "html",
+    "path": "gallery.html"
+   },
+   "invocation": "从动画丰富度扩展中选择不同机制，避免连续使用同一种动画。",
+   "tags": [
+    "漫画",
+    "磁力",
+    "分叉",
+    "波纹",
+    "级联"
+   ]
+  },
+  {
+   "id": "overlay-engine-v1",
+   "name": "口播叠加组件引擎",
+   "version": "2.0.0",
+   "status": "production",
+   "section": "systems",
+   "kind": "engine",
+   "sharing": "shareable-core",
+   "summary": "编辑器内置的 28 种数据驱动动效组件(章节/弹字/卡片/素材/字幕五轨),在「真片编辑」里直接使用。",
+   "sourcePath": "src/editor"
+  },
+  {
+   "id": "firstcut-pipeline-v1",
+   "name": "初剪引擎算法与参数",
+   "version": "2.1.0",
+   "status": "production",
+   "section": "systems",
+   "kind": "algorithm",
+   "sharing": "shareable-core",
+   "summary": "剪气口/剪重说口误/提速/响度归一/转写字幕/AI 初剪的完整算法链,一条命令原片进工程出。",
+   "sourcePath": "firstcut"
+  }
+ ]
+}

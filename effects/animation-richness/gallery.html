@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>动画丰富度扩展 V1</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:#111318;color:#f5f7fa;font-family:"PingFang SC",sans-serif}
+    .app{display:grid;grid-template-columns:minmax(300px,420px) 1fr;min-height:100vh}
+    aside{padding:24px;border-right:1px solid #2b3039;background:#171a20;overflow:auto}
+    h1{font-size:24px;line-height:1.25}
+    .sub{margin-top:8px;color:#9aa5b4;font-size:14px;line-height:1.6}
+    .status{margin:20px 0 12px;color:#2fdacb;font-size:12px;font-weight:700}
+    .shots{display:grid;gap:8px}
+    button{width:100%;padding:12px 14px;border:1px solid #343b47;border-radius:6px;background:#1e232b;color:#f5f7fa;text-align:left;cursor:pointer}
+    button:hover,button.on{border-color:#2fdacb;background:#242c33}
+    button b{display:block;font-size:15px}
+    button span{display:block;margin-top:4px;color:#9aa5b4;font-size:12px}
+    .rules{margin-top:22px;padding-top:18px;border-top:1px solid #343b47}
+    .rules h2{font-size:14px}
+    .rules p{margin-top:8px;color:#aab3c0;font-size:12px;line-height:1.65}
+    main{display:flex;align-items:center;justify-content:center;padding:22px;background:#0d0f13;overflow:hidden}
+    .phone{width:min(51.75vh,540px,100%);aspect-ratio:9/16;border:1px solid #3c4450;background:#000;box-shadow:0 20px 70px rgba(0,0,0,.45)}
+    iframe{width:1080px;height:1920px;border:0;transform-origin:0 0}
+    .viewport{width:100%;height:100%;overflow:hidden}
+    @media(max-width:840px){.app{grid-template-columns:1fr}.phone{width:min(38.25vh,100%)}aside{border-right:0;border-bottom:1px solid #2b3039}.shots{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <h1>动画丰富度扩展 V1</h1>
+      <p class="sub">旧版“封面海报 V2”完全不动。本页展示 6 种新增语义动画，每种使用不同视觉动词，避免一套动画反复换字。</p>
+      <div class="status">33 秒循环预览 · 点击镜头可跳转</div>
+      <div class="shots">
+        <button class="on" data-start="0"><b>01 漫画分格</b><span>并列能力、多人多模块、四象限关系</span></button>
+        <button data-start="5.5"><b>02 速度穿越</b><span>效率差、边际成本、机会成本</span></button>
+        <button data-start="11"><b>03 磁力合流</b><span>能力交叉、系统组合、资源汇聚</span></button>
+        <button data-start="16.5"><b>04 压力堆叠</b><span>信息过载、拥堵、容量上限</span></button>
+        <button data-start="22"><b>05 路径分叉</b><span>选择、取舍、两种行动结果</span></button>
+        <button data-start="27.5"><b>06 波纹反馈</b><span>因果链、闭环、连锁反应</span></button>
+      </div>
+      <div class="rules">
+        <h2>选择规则</h2>
+        <p>先识别口播里的“视觉动词”，再选动画。连续镜头不得重复同一主构图；每条视频至少包含一个本期专属隐喻，但总动画占比仍控制在 25%–40%。</p>
+      </div>
+    </aside>
+    <main>
+      <div class="phone"><div class="viewport"><iframe id="preview" src="index.html?autoplay=1" title="动画预览"></iframe></div></div>
+    </main>
+  </div>
+  <script>
+    const frame=document.getElementById("preview");
+    const phone=document.querySelector(".phone");
+    const resize=()=>{const s=phone.clientWidth/1080;frame.style.transform=`scale(${s})`};
+    new ResizeObserver(resize).observe(phone);resize();
+    document.querySelectorAll("button[data-start]").forEach((button)=>{
+      button.addEventListener("click",()=>{
+        document.querySelectorAll("button[data-start]").forEach((x)=>x.classList.remove("on"));
+        button.classList.add("on");
+        frame.src=`index.html?autoplay=1&start=${button.dataset.start}`;
+      });
+    });
+  </script>
+</body>
+</html>

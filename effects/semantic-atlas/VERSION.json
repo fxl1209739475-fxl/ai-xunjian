@@ -1,0 +1,42 @@
+{
+  "id": "semantic-motion-atlas-v1.0.1",
+  "name": "语义动画库 V1.0.1",
+  "status": "experimental",
+  "created": "2026-07-28",
+  "previousRelease": "../releases/semantic-motion-atlas-v1.0.0",
+  "patchNotes": [
+    "阈值筛选的数字与门槛线解除遮挡",
+    "动态文字在正式弹出前完全隐藏",
+    "漫画分格缩小卡片、拉开中心距离并缩短连接线"
+  ],
+  "productionIntegrated": false,
+  "animationCoverageRule": {
+    "minimumPercent": 0,
+    "maximumPercent": 100,
+    "scope": "exploration-only"
+  },
+  "taxonomy": {
+    "atomic": 16,
+    "composite": 8,
+    "total": 24
+  },
+  "playback": {
+    "autoplay": true,
+    "loopByDefault": false,
+    "pauseControl": true,
+    "seekControl": true
+  },
+  "render": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationSeconds": 6,
+    "codec": "h264",
+    "pixelFormat": "yuv420p"
+  },
+  "separation": [
+    "封面海报 V2",
+    "IP自动剪辑 Skill",
+    "VibeMotion科普动画 Skill"
+  ]
+}

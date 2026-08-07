@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080,height=1920">
+  <link rel="stylesheet" href="atlas.css">
+  <script src="assets/gsap.min.js"></script>
+</head>
+<body>
+  <main
+    id="composition"
+    data-composition-id="main"
+    data-start="0"
+    data-duration="6"
+    data-width="1080"
+    data-height="1920"
+    data-composition-variables='[{"id":"sceneId","label":"Scene","type":"string","default":"mask-reveal"}]'
+  >
+    <div id="atlas-scene"></div>
+  </main>
+  <script src="catalog.js"></script>
+  <script src="scenes-atomic.js"></script>
+  <script src="scenes-composite.js"></script>
+  <script src="engine.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = window.__timelines.main;
+  </script>
+</body>
+</html>

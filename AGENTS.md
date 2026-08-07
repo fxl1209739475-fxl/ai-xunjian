@@ -8,6 +8,7 @@ AI驯剪（ai-xunjian）：开源 AI 短视频剪辑系统。两个模块：
 
 - `firstcut/` **初剪引擎**——`node firstcut/run.mjs 原片.mp4` 一条命令：剪气口 → 剪重说口误 → 提速 → 响度归一 → 转写字幕 → AI 初剪 → 出工程
 - **AI 视频编辑器**（`npm run dev` → http://127.0.0.1:5178/editor.html）——AI 剪辑决定全躺在 `episodes/<工程>/timeline.json`，五轨时间轴可视化改，改完导出成片
+- **动效工作台**（同服务 → http://127.0.0.1:5178/workbench.html）——剪辑方案 / 动画库（`effects/`，含语义动画库 16 种 + 丰富度扩展 6 种，`catalog.json` 为总库索引）/ 引擎参数的资产管理器，编辑器嵌在「真片编辑」tab 里
 
 ## 环境自检与安装（你的首要任务）
 

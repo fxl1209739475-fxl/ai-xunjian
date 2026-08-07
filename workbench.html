@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>本地剪辑与动效中心</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/workbench/app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <p class="eyebrow">LOCAL MOTION ARCHIVE</p>
+        <h1>本地剪辑与动效中心</h1>
+      </div>
+      <nav class="view-tabs" aria-label="工作区">
+        <button class="view-tab active" type="button" data-view="styles">剪辑方案 <span data-count="styles">0</span></button>
+        <button class="view-tab" type="button" data-view="motions">动画与动效 <span data-count="motions">0</span></button>
+        <button class="view-tab" type="button" data-view="systems">引擎与参数 <span data-count="systems">0</span></button>
+        <button class="view-tab" type="button" data-view="workbench">真片编辑</button>
+      </nav>
+      <div class="top-actions">
+        <button id="pauseAll" class="icon-button" type="button" title="暂停当前预览" aria-label="暂停当前预览">Ⅱ</button>
+        <button id="addAsset" class="command-button" type="button">＋ 登记资产</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="libraryToolbar" class="toolbar" aria-label="资产筛选">
+        <label class="search">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="搜索名称、标签或用途" />
+        </label>
+        <select id="statusFilter" aria-label="按状态筛选">
+          <option value="">全部状态</option>
+          <option value="production">生产已锁定</option>
+          <option value="stable">稳定库</option>
+          <option value="experimental">视觉实验</option>
+          <option value="legacy">历史版本</option>
+        </select>
+        <select id="kindFilter" aria-label="按类型筛选">
+          <option value="">全部类型</option>
+          <option value="editing-style">剪辑方案</option>
+          <option value="full-screen">全画幅动画</option>
+          <option value="atlas">动画分类库</option>
+          <option value="lookdev">视觉方案</option>
+          <option value="engine">渲染引擎</option>
+          <option value="algorithm">算法参数</option>
+        </select>
+        <div class="counter"><strong id="visibleCount">0</strong><span>项资产</span></div>
+      </section>
+
+      <section id="libraryWorkspace" class="workspace">
+        <div class="asset-rail">
+          <div id="assetGrid" class="asset-grid" aria-live="polite"></div>
+          <section id="assetContents" class="asset-contents" aria-label="资产内容清单" hidden>
+            <div class="contents-head">
+              <strong id="contentsTitle">内容清单</strong>
+              <span id="contentsHint"></span>
+            </div>
+            <div id="contentsList" class="contents-list"></div>
+          </section>
+        </div>
+        <aside class="preview-pane">
+          <div class="preview-head">
+            <div>
+              <p id="previewKicker" class="eyebrow">PREVIEW</p>
+              <h2 id="previewTitle">选择一项资产</h2>
+            </div>
+            <button id="revealSource" class="icon-button" type="button" title="在文件管理器打开真源" aria-label="在文件管理器打开真源" disabled>↗</button>
+          </div>
+          <div id="previewStage" class="preview-stage">
+            <div class="empty-preview">
+              <span>▶</span>
+              <p>点击左侧资产查看动态预览</p>
+            </div>
+          </div>
+          <div id="previewMeta" class="preview-meta"></div>
+        </aside>
+      </section>
+
+      <section id="workbenchView" class="workbench-view" hidden>
+        <iframe id="workbenchFrame" title="AI 真片剪辑工作台" loading="lazy"></iframe>
+      </section>
+    </main>
+
+    <dialog id="assetDialog">
+      <form id="assetForm" method="dialog">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">REGISTER LOCAL SOURCE</p>
+            <h2>登记新资产</h2>
+          </div>
+          <button id="closeDialog" class="icon-button" value="cancel" title="关闭" aria-label="关闭">×</button>
+        </div>
+        <div class="form-grid">
+          <label>资产名称<input name="name" required /></label>
+          <label>稳定 ID<input name="id" pattern="[a-z0-9][a-z0-9-]{1,63}" placeholder="motion-name-v1" required /></label>
+          <label>版本<input name="version" value="0.1.0" required /></label>
+          <label>状态
+            <select name="status">
+              <option value="experimental">视觉实验</option>
+              <option value="stable">稳定库</option>
+              <option value="production">生产已锁定</option>
+              <option value="legacy">历史版本</option>
+            </select>
+          </label>
+          <label>归属区块
+            <select name="section">
+              <option value="motions">动画与动效</option>
+              <option value="styles">剪辑方案</option>
+              <option value="systems">引擎与参数</option>
+            </select>
+          </label>
+          <label>类型
+            <select name="kind">
+              <option value="editing-style">剪辑方案</option>
+              <option value="lookdev">视觉方案</option>
+              <option value="atlas">动画分类库</option>
+              <option value="full-screen">全画幅动画</option>
+              <option value="engine">渲染引擎</option>
+              <option value="algorithm">算法参数</option>
+            </select>
+          </label>
+          <label>共享边界
+            <select name="sharing">
+              <option value="owner-only">私有</option>
+              <option value="shareable-core">可共享核心</option>
+              <option value="reference-only">仅作参考</option>
+              <option value="not-for-transfer">暂不移交</option>
+            </select>
+          </label>
+          <label>版本分支<input name="track" placeholder="例如：客户定制分支" /></label>
+          <label>派生自<input name="derivedFrom" placeholder="稳定 ID，逗号分隔" /></label>
+          <label class="wide">本地真源路径<input name="sourcePath" placeholder="仓库内相对路径，如 effects/my-motion 或 episodes/我的工程" required /></label>
+          <label>预览类型
+            <select name="previewType">
+              <option value="">无预览</option>
+              <option value="html">HTML</option>
+              <option value="video">视频</option>
+              <option value="image">图片</option>
+            </select>
+          </label>
+          <label>预览相对路径<input name="previewPath" placeholder="gallery.html" /></label>
+          <label class="wide">一句话说明<input name="summary" /></label>
+          <label class="wide">调用口令<input name="invocation" /></label>
+          <label class="wide">移交说明<input name="transferNote" /></label>
+          <label class="wide">标签<input name="tags" placeholder="流程, 粒子, 对比" /></label>
+        </div>
+        <p id="formError" class="form-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="ghost-button" value="cancel">取消</button>
+          <button class="command-button" value="default" type="submit">登记到总库</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/workbench/app.js"></script>
+  </body>
+</html>

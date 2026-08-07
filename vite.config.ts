@@ -97,6 +97,93 @@ const localConfigApi = (): Plugin => ({
   }
 });
 
+// ---- 动效工作台 API:资产总库 catalog 读写 / 真源定位(workbench.html 用) ----
+const workbenchCatalogPath = path.resolve(projectDir, "workbench/catalog.json");
+const workbenchApi = (): Plugin => ({
+  name: "workbench-catalog-api",
+  configureServer(server) {
+    const readCatalog = () => JSON.parse(fscore.readFileSync(workbenchCatalogPath, "utf8"));
+    // 真源路径必须是仓库内相对路径,拒绝越狱
+    const resolveSource = (raw: string): string | null => {
+      if (!raw || path.isAbsolute(raw) || raw.split(/[\\/]/).includes("..")) return null;
+      const abs = path.resolve(projectDir, raw);
+      return abs.startsWith(projectDir + path.sep) ? abs : null;
+    };
+
+    server.middlewares.use("/api/catalog", (req, res) => {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      try {
+        const cat = readCatalog();
+        cat.items = (cat.items || []).map((item: any) => {
+          const abs = resolveSource(item.sourcePath || "");
+          const exists = !!abs && fscore.existsSync(abs);
+          const previewUrl = exists && item.preview?.path
+            ? "/" + String(item.sourcePath).replaceAll("\\", "/").replace(/\/+$/, "") + "/" + item.preview.path
+            : null;
+          return {...item, exists, previewUrl, sourceLabel: item.sourcePath || ""};
+        });
+        res.end(JSON.stringify(cat));
+      } catch (e) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({error: String(e)}));
+      }
+    });
+
+    server.middlewares.use("/api/items", (req, res) => {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      if (req.method !== "POST") { res.statusCode = 405; res.end(JSON.stringify({error: "method-not-allowed"})); return; }
+      const chunks: Buffer[] = [];
+      req.on("data", (c) => chunks.push(Buffer.from(c)));
+      req.on("end", () => {
+        try {
+          const data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+          if (!/^[a-z0-9][a-z0-9-]{1,63}$/.test(data.id || "")) throw new Error("稳定 ID 格式不对(小写字母数字连字符)");
+          if (!data.name || !data.version) throw new Error("名称和版本必填");
+          if (!resolveSource(data.sourcePath || "")) throw new Error("真源路径必须是仓库内的相对路径");
+          const cat = readCatalog();
+          if ((cat.items || []).some((i: any) => i.id === data.id)) throw new Error(`稳定 ID ${data.id} 已存在`);
+          const item: any = {
+            id: data.id, name: data.name, version: data.version,
+            status: data.status || "experimental", section: data.section || "motions",
+            kind: data.kind || "atlas", sharing: data.sharing || "owner-only",
+            sourcePath: String(data.sourcePath).replaceAll("\\", "/").replace(/\/+$/, ""),
+          };
+          if (data.previewType && data.previewPath) item.preview = {type: data.previewType, path: data.previewPath};
+          for (const k of ["summary", "invocation", "transferNote", "track"]) if (data[k]) item[k] = data[k];
+          for (const k of ["derivedFrom", "tags"]) if (data[k]) item[k] = String(data[k]).split(/[,，]/).map((x: string) => x.trim()).filter(Boolean);
+          cat.items = [...(cat.items || []), item];
+          cat.updatedAt = new Date().toISOString().slice(0, 10);
+          fscore.writeFileSync(workbenchCatalogPath, JSON.stringify(cat, null, 1) + "\n");
+          res.end(JSON.stringify({ok: true, item}));
+        } catch (e) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({error: (e as Error).message}));
+        }
+      });
+    });
+
+    server.middlewares.use("/api/reveal", (req, res) => {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      if (req.method !== "POST") { res.statusCode = 405; res.end(JSON.stringify({error: "method-not-allowed"})); return; }
+      try {
+        const url = new URL(req.url || "", "http://x");
+        const id = url.searchParams.get("id") || "";
+        const item = (readCatalog().items || []).find((i: any) => i.id === id);
+        const abs = item ? resolveSource(item.sourcePath || "") : null;
+        if (!abs || !fscore.existsSync(abs)) { res.statusCode = 404; res.end(JSON.stringify({error: "source-not-found"})); return; }
+        const dir = fscore.statSync(abs).isDirectory() ? abs : path.dirname(abs);
+        if (process.platform === "darwin") spawn("open", [dir]);
+        else if (IS_WIN) spawn("explorer", [dir]);
+        else spawn("xdg-open", [dir]);
+        res.end(JSON.stringify({ok: true}));
+      } catch (e) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({error: String(e)}));
+      }
+    });
+  },
+});
+
 // ---- 真片编辑 API:episode 的 timeline.json 读写 / 视频串流 / 一键重渲 ----
 type RenderState = {running: boolean; startedAt: number; exitCode: number | null; log: string; mode?: string; out?: string};
 const DEFAULT_BGM = process.env.XUNJIAN_BGM || "";
@@ -579,7 +666,7 @@ ${script}
 });
 
 export default defineConfig({
-  plugins: [react(), localConfigApi(), episodeApi()],
+  plugins: [react(), localConfigApi(), workbenchApi(), episodeApi()],
   server: {
     host: "127.0.0.1"
   }

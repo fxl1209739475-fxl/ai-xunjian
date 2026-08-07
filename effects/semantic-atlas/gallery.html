@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>语义动画库 V1.0.1 · Motion Atlas</title>
+  <link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="library">
+      <header class="library-head">
+        <div>
+          <p>MOTION ATLAS V1.0.1</p>
+          <h1>语义动画库</h1>
+        </div>
+        <span>24</span>
+      </header>
+
+      <div class="coverage">
+        <b>原子语法 16 / 16</b>
+        <i></i>
+        <b>复合叙事 8</b>
+      </div>
+
+      <div class="filters">
+        <div class="segmented" role="tablist" aria-label="动画类型">
+          <button class="on" data-kind="all" role="tab">全部</button>
+          <button data-kind="atomic" role="tab">原子</button>
+          <button data-kind="composite" role="tab">复合</button>
+        </div>
+        <select id="family-filter" aria-label="分类筛选">
+          <option value="all">全部分类</option>
+          <option value="形态状态">形态状态</option>
+          <option value="空间拓扑">空间拓扑</option>
+          <option value="时间编排">时间编排</option>
+          <option value="物理群体">物理群体</option>
+          <option value="复合叙事">复合叙事</option>
+        </select>
+        <input id="scene-search" type="search" placeholder="搜索动画或用途" aria-label="搜索动画">
+      </div>
+
+      <nav id="scene-list" class="scene-list" aria-label="动画列表"></nav>
+    </aside>
+
+    <main class="workspace">
+      <header class="toolbar">
+        <div class="scene-identity">
+          <span id="current-number">01</span>
+          <div>
+            <h2 id="current-title">遮罩揭示</h2>
+            <p id="current-meta">形态状态 · 原子语法</p>
+          </div>
+        </div>
+
+        <div class="transport">
+          <button id="previous" class="icon-button" title="上一种动画" aria-label="上一种动画">◀</button>
+          <button id="restart" class="icon-button" title="重新播放" aria-label="重新播放">↻</button>
+          <button id="play-toggle" class="primary-control" title="暂停动画" aria-label="暂停动画"><span>Ⅱ</span><b>暂停</b></button>
+          <button id="next" class="icon-button" title="下一种动画" aria-label="下一种动画">▶</button>
+        </div>
+
+        <div class="playback-options">
+          <label class="toggle"><input id="loop-toggle" type="checkbox"><span></span><b>循环</b></label>
+          <div class="speed-control" aria-label="播放速度">
+            <button data-speed="0.5">0.5×</button>
+            <button class="on" data-speed="1">1×</button>
+            <button data-speed="1.5">1.5×</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="preview-zone">
+        <div class="phone">
+          <div class="viewport">
+            <iframe id="preview" src="index.html?scene=mask-reveal&autoplay=1" title="动画预览"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <footer class="timeline-bar">
+        <span id="current-time">0.0</span>
+        <input id="progress" type="range" min="0" max="1000" value="0" aria-label="动画进度">
+        <span id="total-time">5.6</span>
+        <p id="current-use">证据揭示、答案公布、重点聚焦</p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="catalog.js"></script>
+  <script src="scenes-atomic.js"></script>
+  <script src="scenes-composite.js"></script>
+  <script src="gallery.js"></script>
+</body>
+</html>
